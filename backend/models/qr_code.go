@@ -1,0 +1,14 @@
+package models
+
+import "time"
+
+type QRCode struct {
+	UserID       string    `json:"user_id" db:"user_id"`
+	RandomString string    `json:"random_string" db:"random_string"`
+	CreatedAt    time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at" db:"updated_at"`
+}
+
+type GenerateRequest struct {
+	UserID string `json:"user_id" validate:"required"`
+}
