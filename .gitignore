@@ -30,3 +30,39 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# Frontend (Node.js/Svelte) specific
+node_modules/
+.svelte-kit/
+build/
+dist/
+.vite/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Test files and temporary artifacts
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.tar.gz
+*.zip
+test_*.png
+final_test_*.png
+verification_test_*.png
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
