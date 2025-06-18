@@ -67,6 +67,38 @@ func (db *DB) GetQRCode(userID string) (*models.QRCode, error) {
 	return &qr, nil
 }
 
+func (db *DB) VerifyAndDeleteQRCode(userID, randomString string) (bool, error) {
+	tx, err := db.conn.Begin()
+	if err != nil {
+		return false, err
+	}
+	defer tx.Rollback()
+
+	var count int
+	query := `SELECT COUNT(*) FROM qr_codes WHERE user_id = ? AND random_string = ?`
+	err = tx.QueryRow(query, userID, randomString).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+
+	if count == 0 {
+		return false, nil
+	}
+
+	deleteQuery := `DELETE FROM qr_codes WHERE user_id = ? AND random_string = ?`
+	_, err = tx.Exec(deleteQuery, userID, randomString)
+	if err != nil {
+		return false, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 func (db *DB) Close() error {
 	return db.conn.Close()
 }

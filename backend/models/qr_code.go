@@ -12,3 +12,12 @@ type QRCode struct {
 type GenerateRequest struct {
 	UserID string `json:"user_id" validate:"required"`
 }
+
+type VerifyRequest struct {
+	QRData string `json:"qr_data" validate:"required"`
+}
+
+type VerifyResponse struct {
+	Valid   bool   `json:"valid"`
+	Message string `json:"message"`
+}

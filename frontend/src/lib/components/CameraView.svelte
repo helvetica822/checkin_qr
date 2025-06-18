@@ -10,10 +10,35 @@
 	let error: string | null = null;
 
 	/**
+	 * QRコード検証API呼び出し
+	 * @param qrData - QRコードデータ
+	 */
+	async function verifyQRCode(qrData: string): Promise<{ valid: boolean; message: string }> {
+		try {
+			const response = await fetch('http://localhost:8080/api/qr-code/verify', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ qr_data: qrData }),
+			});
+
+			if (!response.ok) {
+				throw new Error('API呼び出しに失敗しました');
+			}
+
+			return await response.json();
+		} catch (err) {
+			console.error('QRコード検証エラー:', err);
+			return { valid: false, message: '検証中にエラーが発生しました' };
+		}
+	}
+
+	/**
 	 * QRコード検知時の処理
 	 * @param result - QRスキャン結果
 	 */
-	function handleQRDetected(result: QRScanResult): void {
+	async function handleQRDetected(result: QRScanResult): Promise<void> {
 		const canvas = document.createElement('canvas');
 		const ctx = canvas.getContext('2d')!;
 		canvas.width = result.imageData.width;
@@ -23,8 +48,16 @@
 		const imageDataUrl = canvas.toDataURL('image/png');
 		
 		qrImage.set(imageDataUrl);
-		qrResult.set(result.data);
-		detectedQrCode.set(result.data);
+		
+		const verificationResult = await verifyQRCode(result.data);
+		
+		if (verificationResult.valid) {
+			qrResult.set(verificationResult.message);
+			detectedQrCode.set(verificationResult.message);
+		} else {
+			qrResult.set(verificationResult.message);
+			detectedQrCode.set(verificationResult.message);
+		}
 		
 		setTimeout(() => {
 			qrImage.set(null);

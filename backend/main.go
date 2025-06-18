@@ -31,6 +31,7 @@ func main() {
 	api := e.Group("/api")
 	api.GET("/health", qrHandler.HealthCheck)
 	api.POST("/qr-code/generate", qrHandler.GenerateQRCode)
+	api.POST("/qr-code/verify", qrHandler.VerifyQRCode)
 
 	log.Println("サーバーを開始します: http://localhost:8080")
 	log.Fatal(e.Start(":8080"))
