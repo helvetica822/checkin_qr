@@ -15,6 +15,7 @@ export class QRScanner {
 	private stream: MediaStream | null = null;
 	private animationId: number | null = null;
 	private onDetected: (result: QRScanResult) => void;
+	private isPaused: boolean = false;
 
 	constructor(
 		video: HTMLVideoElement,
@@ -61,10 +62,28 @@ export class QRScanner {
 			this.stream.getTracks().forEach(track => track.stop());
 			this.stream = null;
 		}
+		this.isPaused = false;
+	}
+
+	/**
+	 * QRコードスキャンを一時停止します
+	 */
+	pauseScanning(): void {
+		this.isPaused = true;
+	}
+
+	/**
+	 * QRコードスキャンを再開します
+	 */
+	resumeScanning(): void {
+		this.isPaused = false;
+		if (!this.animationId && this.stream) {
+			this.scan();
+		}
 	}
 
 	private scan(): void {
-		if (this.video.readyState === this.video.HAVE_ENOUGH_DATA) {
+		if (!this.isPaused && this.video.readyState === this.video.HAVE_ENOUGH_DATA) {
 			this.context.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
 			const imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
 			const code = jsQR(imageData.data, imageData.width, imageData.height);
@@ -74,8 +93,12 @@ export class QRScanner {
 					data: code.data,
 					imageData: imageData
 				});
+				return; // QRコード検知時はここで処理を終了
 			}
 		}
-		this.animationId = requestAnimationFrame(() => this.scan());
+		
+		if (!this.isPaused) {
+			this.animationId = requestAnimationFrame(() => this.scan());
+		}
 	}
 }
