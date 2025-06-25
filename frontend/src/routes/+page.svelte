@@ -62,14 +62,12 @@
 
 	.camera-section {
 		flex: 1;
-		min-height: 250px;
-		max-height: 300px;
+		height: 100%;
 	}
 
 	.display-section {
 		flex: 1;
-		min-height: 250px;
-		max-height: 300px;
+		height: 100%;
 	}
 
 	.result-section {
@@ -87,8 +85,7 @@
 
 		.camera-section,
 		.display-section {
-			min-height: 200px;
-			max-height: 250px;
+			height: 100%;
 		}
 
 		.result-section {
