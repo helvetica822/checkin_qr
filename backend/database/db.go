@@ -60,6 +60,7 @@ func (db *DB) createTables() error {
 	CREATE TABLE IF NOT EXISTS qr_codes (
 		user_id VARCHAR(255) PRIMARY KEY,
 		random_string VARCHAR(10) NOT NULL,
+		status INTEGER NOT NULL DEFAULT 0,
 		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 	)`
@@ -84,14 +85,15 @@ func (db *DB) createTables() error {
 func (db *DB) UpsertQRCode(userID, randomString string) error {
 	now := time.Now()
 	query := `
-	INSERT INTO qr_codes (user_id, random_string, created_at, updated_at)
-	VALUES ($1, $2, $3, $4)
+	INSERT INTO qr_codes (user_id, random_string, status, created_at, updated_at)
+	VALUES ($1, $2, $3, $4, $5)
 	ON CONFLICT (user_id) 
 	DO UPDATE SET 
 		random_string = EXCLUDED.random_string,
+		status = 0,
 		updated_at = EXCLUDED.updated_at`
 
-	_, err := db.conn.Exec(query, userID, randomString, now, now)
+	_, err := db.conn.Exec(query, userID, randomString, 0, now, now)
 	if err != nil {
 		return fmt.Errorf("QRコードデータの保存に失敗しました: %w", err)
 	}
@@ -99,11 +101,11 @@ func (db *DB) UpsertQRCode(userID, randomString string) error {
 }
 
 func (db *DB) GetQRCode(userID string) (*models.QRCode, error) {
-	query := `SELECT user_id, random_string, created_at, updated_at FROM qr_codes WHERE user_id = $1`
+	query := `SELECT user_id, random_string, status, created_at, updated_at FROM qr_codes WHERE user_id = $1`
 	
 	var qr models.QRCode
 	err := db.conn.QueryRow(query, userID).Scan(
-		&qr.UserID, &qr.RandomString, &qr.CreatedAt, &qr.UpdatedAt,
+		&qr.UserID, &qr.RandomString, &qr.Status, &qr.CreatedAt, &qr.UpdatedAt,
 	)
 	
 	if err != nil {
@@ -113,7 +115,7 @@ func (db *DB) GetQRCode(userID string) (*models.QRCode, error) {
 	return &qr, nil
 }
 
-func (db *DB) VerifyAndDeleteQRCode(userID, randomString string) (bool, error) {
+func (db *DB) VerifyAndUpdateQRCode(userID, randomString string) (bool, error) {
 	tx, err := db.conn.Begin()
 	if err != nil {
 		return false, fmt.Errorf("トランザクション開始に失敗しました: %w", err)
@@ -121,7 +123,7 @@ func (db *DB) VerifyAndDeleteQRCode(userID, randomString string) (bool, error) {
 	defer tx.Rollback()
 
 	var count int
-	query := `SELECT COUNT(*) FROM qr_codes WHERE user_id = $1 AND random_string = $2`
+	query := `SELECT COUNT(*) FROM qr_codes WHERE user_id = $1 AND random_string = $2 AND status = 0`
 	err = tx.QueryRow(query, userID, randomString).Scan(&count)
 	if err != nil {
 		return false, fmt.Errorf("QRコード検証に失敗しました: %w", err)
@@ -131,10 +133,10 @@ func (db *DB) VerifyAndDeleteQRCode(userID, randomString string) (bool, error) {
 		return false, nil
 	}
 
-	deleteQuery := `DELETE FROM qr_codes WHERE user_id = $1 AND random_string = $2`
-	_, err = tx.Exec(deleteQuery, userID, randomString)
+	updateQuery := `UPDATE qr_codes SET status = 1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $1 AND random_string = $2 AND status = 0`
+	_, err = tx.Exec(updateQuery, userID, randomString)
 	if err != nil {
-		return false, fmt.Errorf("QRコードデータの削除に失敗しました: %w", err)
+		return false, fmt.Errorf("QRコードステータスの更新に失敗しました: %w", err)
 	}
 
 	err = tx.Commit()
