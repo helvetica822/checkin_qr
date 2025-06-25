@@ -53,7 +53,7 @@
 	}
 
 	.main-content {
-		flex: 1;
+		flex: 2;
 		display: flex;
 		gap: 16px;
 		padding: 16px;
@@ -62,16 +62,20 @@
 
 	.camera-section {
 		flex: 1;
-		min-height: 400px;
+		min-height: 250px;
+		max-height: 300px;
 	}
 
 	.display-section {
 		flex: 1;
-		min-height: 400px;
+		min-height: 250px;
+		max-height: 300px;
 	}
 
 	.result-section {
-		padding: 0 16px 16px 16px;
+		flex: 1;
+		padding: 16px;
+		min-height: 200px;
 	}
 
 	@media (max-width: 768px) {
@@ -83,7 +87,12 @@
 
 		.camera-section,
 		.display-section {
-			min-height: 250px;
+			min-height: 200px;
+			max-height: 250px;
+		}
+
+		.result-section {
+			min-height: 150px;
 		}
 
 		.app-header h1 {
