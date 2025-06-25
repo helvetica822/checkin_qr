@@ -53,7 +53,7 @@
 	}
 
 	.main-content {
-		flex: 2;
+		flex: 3;
 		display: flex;
 		gap: 16px;
 		padding: 16px;
