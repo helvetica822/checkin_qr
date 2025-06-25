@@ -3,10 +3,12 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 	"qr-backend/models"
 	"time"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
@@ -15,6 +17,10 @@ type DB struct {
 }
 
 func NewDB() (*DB, error) {
+	if err := godotenv.Load(); err != nil {
+		log.Printf(".envファイルの読み込みに失敗しました（環境変数を使用します）: %v", err)
+	}
+
 	dbHost := getEnvOrDefault("DB_HOST", "localhost")
 	dbPort := getEnvOrDefault("DB_PORT", "5432")
 	dbUser := getEnvOrDefault("DB_USER", "postgres")
