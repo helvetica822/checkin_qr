@@ -7,7 +7,7 @@
 ### バックエンド
 - **言語**: Go 1.21
 - **Webフレームワーク**: Echo v4.11.4
-- **データベース**: SQLite（インメモリ）
+- **データベース**: PostgreSQL
 - **QRコード生成**: github.com/skip2/go-qrcode
 - **その他**: CORS対応、ログ出力、リカバリー機能
 
@@ -61,12 +61,53 @@
 
 #### qr_codesテーブル
 ```sql
-CREATE TABLE qr_codes (
-    user_id TEXT PRIMARY KEY,
-    random_string TEXT NOT NULL,
-    created_at DATETIME NOT NULL,
-    updated_at DATETIME NOT NULL
+CREATE TABLE IF NOT EXISTS qr_codes (
+    user_id VARCHAR(255) PRIMARY KEY,
+    random_string VARCHAR(10) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+```
+
+## データベース設定
+
+### PostgreSQL接続設定
+
+アプリケーションはPostgreSQLデータベースを使用します。以下の環境変数で接続設定を行ってください：
+
+```bash
+# 環境変数の設定例
+export DB_HOST=localhost
+export DB_PORT=5432
+export DB_USER=postgres
+export DB_PASSWORD=your_password
+export DB_NAME=qr_code_db
+export DB_SSLMODE=disable
+```
+
+または、`.env`ファイルを作成して設定することも可能です：
+```bash
+cp .env.example .env
+# .envファイルを編集して適切な値を設定
+```
+
+### データベース接続先の変更方法
+
+データベース接続先を変更する場合は、以下のファイルの環境変数設定を確認してください：
+- **環境変数**: 上記の`DB_*`環境変数を変更
+- **コード内設定**: `backend/database/db.go`の`NewDB()`関数内の`getEnvOrDefault()`呼び出し部分
+- **DDLファイル**: `backend/database/schema.sql`でテーブル構造を確認
+
+### データベース初期化
+
+PostgreSQLサーバーでデータベースを作成：
+```sql
+CREATE DATABASE qr_code_db;
+```
+
+テーブルは自動作成されますが、手動で作成する場合は：
+```bash
+psql -d qr_code_db -f backend/database/schema.sql
 ```
 
 ## 実行方法
@@ -172,12 +213,12 @@ qr-code-app/
 ```
 
 ### 注意事項
-- データベースはインメモリSQLiteを使用しているため、サーバー再起動でデータが消失します
+- PostgreSQLデータベースへの接続が必要です（環境変数で設定）
 - カメラアクセスはHTTPS環境またはlocalhostでのみ動作します
 - QRコード読み取り精度は照明条件に依存します
 
 ### 今後の改善予定
-- PostgreSQLへのデータベース移行
 - Docker対応
 - テストコードの追加
 - CI/CD パイプラインの構築
+- データベース接続プールの最適化

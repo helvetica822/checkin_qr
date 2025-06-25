@@ -3,14 +3,35 @@
 	import { fade, slide } from 'svelte/transition';
 
 	$: hasResult = $qrResult !== null;
+	
+	// QRコード結果からユーザIDを抽出する関数
+	function extractUserIdFromResult(result: string | null): string | null {
+		if (!result) return null;
+		
+		// "不正なQRコードです" の場合はそのまま返す
+		if (result === '不正なQRコードです') {
+			return result;
+		}
+		
+		// QRコードの形式は "user_id:random_string" なので、:で分割してuser_idを取得
+		const parts = result.split(':');
+		if (parts.length >= 2) {
+			return parts[0]; // user_id部分を返す
+		}
+		
+		// 形式が異なる場合はそのまま返す
+		return result;
+	}
+	
+	$: userId = extractUserIdFromResult($qrResult);
+	$: welcomeMessage = userId && userId !== '不正なQRコードです' ? `${userId}ようこそ` : userId;
 </script>
 
 <div class="result-container">
 	{#if hasResult}
 		<div class="result-content" in:slide={{ duration: 500 }} out:fade={{ duration: 300 }}>
-			<h3>読み取り結果</h3>
-			<div class="result-text">
-				<p>{$qrResult}</p>
+			<div class="welcome-message">
+				<p class="welcome-text">{welcomeMessage}</p>
 			</div>
 			<div class="countdown-indicator">
 				<div class="countdown-bar"></div>
@@ -26,11 +47,11 @@
 <style>
 	.result-container {
 		width: 100%;
+		height: 100%;
 		padding: 20px;
 		background-color: #fff;
 		border-radius: 8px;
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-		min-height: 120px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -38,30 +59,29 @@
 
 	.result-content {
 		width: 100%;
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
 		text-align: center;
 	}
 
-	.result-content h3 {
-		margin: 0 0 16px 0;
-		color: #333;
-		font-size: 18px;
-		font-weight: 600;
+	.welcome-message {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin-bottom: 20px;
 	}
 
-	.result-text {
-		background-color: #f8f9fa;
-		border: 1px solid #e9ecef;
-		border-radius: 4px;
-		padding: 12px;
-		margin-bottom: 16px;
-		word-break: break-all;
-	}
-
-	.result-text p {
+	.welcome-text {
 		margin: 0;
-		font-family: 'Courier New', monospace;
-		font-size: 14px;
-		color: #495057;
+		font-size: 2.5rem;
+		font-weight: 600;
+		color: #1976d2;
+		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+		line-height: 1.2;
 	}
 
 	.countdown-indicator {

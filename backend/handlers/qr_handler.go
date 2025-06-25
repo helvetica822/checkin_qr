@@ -81,7 +81,7 @@ func (h *QRHandler) VerifyQRCode(c echo.Context) error {
 	userID := parts[0]
 	randomString := parts[1]
 
-	valid, err := h.db.VerifyAndDeleteQRCode(userID, randomString)
+	valid, err := h.db.VerifyAndUpdateQRCode(userID, randomString)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, models.VerifyResponse{
 			Valid:   false,

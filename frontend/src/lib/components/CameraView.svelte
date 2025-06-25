@@ -39,6 +39,11 @@
 	 * @param result - QRスキャン結果
 	 */
 	async function handleQRDetected(result: QRScanResult): Promise<void> {
+		// QRコード検知時にスキャンを停止
+		if (scanner) {
+			scanner.pauseScanning();
+		}
+		
 		const canvas = document.createElement('canvas');
 		const ctx = canvas.getContext('2d')!;
 		canvas.width = result.imageData.width;
@@ -59,10 +64,18 @@
 			detectedQrCode.set(verificationResult.message);
 		}
 		
+		// 5秒後に結果をクリアし、1秒待ってからスキャンを再開
 		setTimeout(() => {
 			qrImage.set(null);
 			qrResult.set(null);
 			detectedQrCode.set(null);
+			
+			// 1秒待ってからスキャンを再開
+			setTimeout(() => {
+				if (scanner) {
+					scanner.resumeScanning();
+				}
+			}, 1000);
 		}, 5000);
 	}
 
